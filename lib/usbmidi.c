@@ -198,21 +198,17 @@ void USBMIDIDeviceCompletionRoutine (TUSBRequest *pURB, void *pParam, void *pCon
 	{
 		assert (pThis->m_pPacketBuffer != 0);
 
-		u8 *pEnd = pThis->m_pPacketBuffer + USBRequestGetResultLength(pURB);
-		for (u8 *pPacket = pThis->m_pPacketBuffer; pPacket < pEnd; pPacket += EVENT_PACKET_SIZE)
+		// XXX HEY
+		//
+		// We're changing the library behaviour here.  In my application I need
+		// to signal the receipt of MIDI data to another core via an IPI, and
+		// I'd really rather just generate one IPI for all of the currently
+		// avaialble MIDI data.  I'm going to abuse the existing MIDI callback
+		// infrastructure to do what I want.
+		if (pThis->m_pPacketHandler != 0)
 		{
-			// Follow the Linux driver's example and ignore packets with Cable
-			// Number == Code Index Number == 0, which some devices seem to
-			// generate as padding in spite of their status as reserved.
-			if (pPacket[0] != 0)
-			{
-				if (pThis->m_pPacketHandler != 0)
-				{
-					unsigned nCable = pPacket[0] >> 4;
-					unsigned nLength = cin_to_length[pPacket[0] & 0xf];
-					pThis->m_pPacketHandler(nCable, nLength, &pPacket[1]);
-				}
-			}
+			unsigned nLength = USBRequestGetResultLength(pURB);
+			pThis->m_pPacketHandler(0, nLength, pThis->m_pPacketBuffer);
 		}
 	}
 
