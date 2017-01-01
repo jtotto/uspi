@@ -21,8 +21,14 @@
 #include <uspi/types.h>
 #include <uspi/assert.h>
 
-#define	EnableInterrupts()	__asm volatile ("cpsie i")
-#define	DisableInterrupts()	__asm volatile ("cpsid i")
+// XXX HEY
+//
+// We're actually using FIQs for USPi, so these need to change.
+#define CPSR_FIQ_BIT (1 << 6)
+
+// i -> f
+#define	EnableInterrupts()	__asm volatile ("cpsie f")
+#define	DisableInterrupts()	__asm volatile ("cpsid f")
 
 static volatile unsigned s_nCriticalLevel = 0;
 static volatile boolean s_bWereEnabled;
@@ -36,7 +42,7 @@ void uspi_EnterCritical (void)
 
 	if (s_nCriticalLevel++ == 0)
 	{
-		s_bWereEnabled = nFlags & 0x80 ? FALSE : TRUE;
+		s_bWereEnabled = nFlags & CPSR_FIQ_BIT ? FALSE : TRUE;
 	}
 
 	DataMemBarrier ();
