@@ -176,7 +176,7 @@ void USPiGamePadRegisterStatusHandler (TGamePadStatusHandler *pStatusHandler);
 int USPiMIDIAvailable (void);
 
 // The packet handler is called once for each MIDI event packet received from the device.
-typedef void TUSPiMIDIPacketHandler (unsigned nCable, unsigned nLength, u8 *pPacket);
+typedef void TUSPiMIDIPacketHandler (unsigned nCable, unsigned nLength, unsigned char *pPacket);
 void USPiMIDIRegisterPacketHandler (TUSPiMIDIPacketHandler *pPacketHandler);
 
 //
