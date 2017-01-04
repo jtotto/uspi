@@ -89,11 +89,20 @@ boolean USBMIDIDeviceConfigure (TUSBDevice *pUSBDevice)
 		return FALSE;
 	}
 
+	TString *pName = USBDeviceGetName (pUSBDevice, DeviceNameVendor);
+	boolean bSpecialRolandSnowflake = StringCompare (pName, "ven582-12a") == 0;
+	if (bSpecialRolandSnowflake)
+	{
+		LogWrite (FromMIDI, LOG_NOTICE, "Roland UM-ONE detected");
+	}
+	_String (pName);
+	free (pName);
+
 	TUSBInterfaceDescriptor *pInterfaceDesc;
 	while ((pInterfaceDesc = (TUSBInterfaceDescriptor *) USBDeviceGetDescriptor (&pThis->m_USBDevice, DESCRIPTOR_INTERFACE)) != 0)
 	{
 		if (   pInterfaceDesc->bNumEndpoints		==  0
-			|| pInterfaceDesc->bInterfaceClass		!= 0x01  // Audio class
+			|| pInterfaceDesc->bInterfaceClass		!= (bSpecialRolandSnowflake ? 0xff : 0x01)
 			|| pInterfaceDesc->bInterfaceSubClass	!= 0x03  // MIDI streaming
 			|| pInterfaceDesc->bInterfaceProtocol	!= 0x00) // unused, must be 0
 		{
@@ -116,12 +125,15 @@ boolean USBMIDIDeviceConfigure (TUSBDevice *pUSBDevice)
 				continue;
 			}
 
-			TUSBMIDIStreamingEndpointDescriptor *pMIDIDesc =
-				(TUSBMIDIStreamingEndpointDescriptor *) USBDeviceGetDescriptor (&pThis->m_USBDevice, DESCRIPTOR_CS_ENDPOINT);
-			if (   pMIDIDesc == 0
-				|| (u8 *)pEndpointDesc + pEndpointDesc->bLength != (u8 *)pMIDIDesc)
+			if (!bSpecialRolandSnowflake)
 			{
-				continue;
+				TUSBMIDIStreamingEndpointDescriptor *pMIDIDesc =
+					(TUSBMIDIStreamingEndpointDescriptor *) USBDeviceGetDescriptor (&pThis->m_USBDevice, DESCRIPTOR_CS_ENDPOINT);
+				if (   pMIDIDesc == 0
+					|| (u8 *)pEndpointDesc + pEndpointDesc->bLength != (u8 *)pMIDIDesc)
+				{
+					continue;
+				}
 			}
 
 			assert (pThis->m_pEndpointIn == 0);

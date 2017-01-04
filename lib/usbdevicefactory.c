@@ -98,13 +98,14 @@ TUSBDevice *GetDevice (TUSBDevice *pParent, TString *pName)
         USBGamePadDevice (pDevice, pParent);
         pResult = (TUSBDevice *) pDevice;
     }
-	else if (StringCompare (pName, "int1-3-0") == 0)
+	else if (StringCompare (pName, "int1-3-0") == 0 || StringCompare (pName, "ven582-12a") == 0)
 	{
 		TUSBMIDIDevice *pDevice = (TUSBMIDIDevice *) malloc (sizeof (TUSBMIDIDevice));
 		assert (pDevice != 0);
 		USBMIDIDevice (pDevice, pParent);
 		pResult = (TUSBDevice *)pDevice;
 	}
+
 	// new devices follow
 
 	if (pResult != 0)
